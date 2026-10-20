@@ -34,5 +34,6 @@ def analyze(records, rules: list[dict[str,Any]]|None=None, expected_sources: set
         matching=[r for r in ordered if not rule.get("event_type") or r.event.event_type==rule["event_type"]]
         if matching and rule.get("predicate"):
             r=matching[0]; claims.append(Claim(subject=r.id,predicate=rule["predicate"],object=rule.get("object",True),epistemic_state=EpistemicState.INFERRED,confidence={"score":float(rule.get("confidence",.5)),"factors":{"source_reliability":.8,"temporal_consistency":.8,"entity_linkage":.8}},limitations=["Rule-derived inference"],rule=str(rule.get("id","rule"))))
+            graph.add_claim(claims[-1], r.id)
     breakdown={str(rule.get("id","rule")): {"source_reliability":.8,"temporal_consistency":.8,"entity_linkage":.8,"score":float(rule.get("confidence",.5))} for rule in (rules or [])}
     return AnalysisResult(ordered,tuple(claims),contradictions,gaps,graph,chain,breakdown)

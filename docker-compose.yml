@@ -4,20 +4,38 @@ services:
       context: .
       dockerfile: Dockerfile.api
     environment:
-      - PYTHONUNBUFFERED=1
-      - TRACEWEAVE_DATA_DIR=/app/.traceweave-data
+      PYTHONUNBUFFERED: "1"
+      TRACEWEAVE_DATA_DIR: /app/.traceweave-data
+      TRACEWEAVE_API_KEY: ${TRACEWEAVE_API_KEY:-}
+      TRACEWEAVE_CORS_ORIGINS: ${TRACEWEAVE_CORS_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
     volumes:
       - traceweave-data:/app/.traceweave-data
-    ports: ["8000:8000"]
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
   web:
     build:
       context: ./web
       args:
-        NEXT_PUBLIC_API_URL: http://localhost:8000
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8000
-    depends_on: [api]
-    ports: ["3000:3000"]
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      HOSTNAME: 0.0.0.0
+      PORT: "3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
 
 volumes:
   traceweave-data:

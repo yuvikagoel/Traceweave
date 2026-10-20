@@ -26,7 +26,7 @@ def _record(raw, source, kind, locator, at, line=None, verbatim=None, config=Non
         if mapped.get(key) is not None: claims.append(Claim(subject=str(mapped.get("id") or mapped.get("event_id") or locator), predicate="actor", object=str(mapped[key]), epistemic_state=EpistemicState.OBSERVED))
     if mapped.get("src_ip") or mapped.get("source_ip"): claims.append(Claim(subject=locator,predicate="source_ip",object=mapped.get("src_ip",mapped.get("source_ip")),epistemic_state=EpistemicState.OBSERVED))
     offset = float(config.get("known_clock_offset_seconds", 0) or 0); zone = config.get("timezone")
-    return EvidenceRecord(raw_record=raw,event=Event(event_type=str(mapped.get("event_type") or mapped.get("event") or mapped.get("action") or kind),occurred_at=_time(at, offset, zone),ts_uncertainty_s=abs(offset),data=mapped),provenance=Provenance(source=source,captured_at=_time(at, offset, zone),locator=locator,collector="traceweave"),claims=tuple(claims),source_id=config.get("source_id") or source,file=source,line=line,verbatim=verbatim or "",raw_line=verbatim or "",raw_sha256=sha256_raw_record(raw))
+    return EvidenceRecord(raw_record=raw,event=Event(event_type=str(mapped.get("event_type") or mapped.get("event") or mapped.get("action") or kind),occurred_at=_time(at, offset, zone),ts_uncertainty_s=abs(offset),data=mapped),provenance=Provenance(source=source,captured_at=_time(at, 0, zone),locator=locator,collector="traceweave"),claims=tuple(claims),source_id=config.get("source_id") or source,file=source,line=line,verbatim=verbatim or "",raw_line=verbatim or "",raw_sha256=sha256_raw_record(raw))
 def parse_auth_jsonl(text, source="auth.jsonl", config=None):
     out=[]
     for n,line in enumerate(text.splitlines(),1):
@@ -38,11 +38,18 @@ def parse_application_audit(text, source="application.audit", config=None):
     for n,line in enumerate(text.splitlines(),1):
         if not line.strip() or line.lstrip().startswith("#"): continue
         try: raw=json.loads(line)
-        except json.JSONDecodeError: raw={k:v.strip("\"'") for k,v in (t.split("=",1) for t in line.split() if "=" in t)}
+        except json.JSONDecodeError:
+            raw={k:v.strip("\"'") for k,v in (t.split("=",1) for t in line.split() if "=" in t)}
+            if not raw:
+                raise ValueError(f"line {n} is neither JSON nor key=value audit data")
         out.append(_record(raw,source,"application_audit",str(raw.get("id",n)),raw.get("timestamp",raw.get("time")),n,line,config))
     return out
 def parse_network_csv(text, source="network.csv", config=None):
     out=[]; lines=text.splitlines(); reader=csv.DictReader(io.StringIO(text))
+    if not reader.fieldnames:
+        raise ValueError("network CSV must include a header")
+    if not {"timestamp", "ts", "time"}.intersection(reader.fieldnames):
+        raise ValueError("network CSV must include timestamp, ts, or time column")
     for n,raw in enumerate(reader,2):
         verbatim=lines[n-1] if n-1 < len(lines) else ",".join(str(value or "") for value in raw.values())
         out.append(_record(dict(raw),source,"network",str(raw.get("id",n)),raw.get("timestamp",raw.get("ts",raw.get("time"))),n,verbatim,config))

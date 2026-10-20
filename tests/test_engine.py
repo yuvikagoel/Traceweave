@@ -27,3 +27,20 @@ def test_rule_derived_claims_are_never_observed():
     result = analyze([make_record()], rules=[{"id": "R-1", "event_type": "created", "predicate": "follows", "object": True}])
     assert result.claims
     assert all(not (claim.rule and claim.epistemic_state is EpistemicState.OBSERVED) for claim in result.claims)
+
+
+def test_engine_chain_uses_raw_payload_and_inferred_claim_is_graph_link():
+    record = make_record({"event": "created"})
+    result = analyze([record], rules=[{"id": "R-1", "event_type": "created", "predicate": "related_to", "object": "asset"}])
+    assert result.chain.entries[0].chain_hash == HashChainEvidenceStore.link_hash("0" * 64, record.raw_record)
+    assert any(link["target"] == "asset" and link["relation"] == "related_to" for link in result.graph.as_dict()["links"])
+
+def test_malformed_audit_and_network_input_is_rejected():
+    from traceweave.engine import parse_application_audit, parse_network_csv
+    with pytest.raises(ValueError): parse_application_audit("not valid audit data\n")
+    with pytest.raises(ValueError): parse_network_csv("id,src_ip\n1,10.0.0.1\n")
+
+def test_clock_offset_is_detected_against_capture_time():
+    from traceweave.engine import parse_auth_jsonl
+    record = parse_auth_jsonl('{"id":"one","timestamp":"2026-01-01T00:00:00Z"}\n', config={"known_clock_offset_seconds": 86401})[0]
+    assert any(item["type"] == "clock_skew" for item in analyze([record]).contradictions)

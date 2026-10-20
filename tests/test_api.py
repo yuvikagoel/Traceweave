@@ -43,3 +43,19 @@ def test_identical_upload_has_byte_identical_json_report(tmp_path: Path) -> None
     left = client.get(f"/cases/{first['id']}/report?format=json").content
     right = client.get(f"/cases/{second['id']}/report?format=json").content
     assert left == right
+
+
+def test_duplicate_filenames_are_rejected(tmp_path: Path) -> None:
+    client = TestClient(create_app(tmp_path))
+    files = [("files", ("events.jsonl", b'{"id":"1","timestamp":"2026-01-01T00:00:00Z"}\n', "application/jsonl")), ("files", ("events.jsonl", b'{"id":"2","timestamp":"2026-01-01T00:00:00Z"}\n', "application/jsonl"))]
+    response = client.post("/cases", files=files)
+    assert response.status_code == 400
+
+def test_api_chain_matches_engine_and_config_changes_case_identity(tmp_path: Path) -> None:
+    client = TestClient(create_app(tmp_path))
+    content = b'{"id":"one","timestamp":"2026-01-01T00:00:00Z"}\n'
+    first = client.post("/cases", files={"files": ("events.jsonl", content, "application/jsonl")}, data={"config": "{}"}).json()
+    second = client.post("/cases", files={"files": ("events.jsonl", content, "application/jsonl")}, data={"config": '{"events.jsonl":{"source_id":"other"}}'}).json()
+    assert first["id"] != second["id"]
+    manifest = client.get(f"/cases/{first['id']}/manifest").json()
+    assert manifest["chain_valid"] is True

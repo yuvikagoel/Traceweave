@@ -1,0 +1,206 @@
+{
+  "version": 1,
+  "historyId": "8e872efc-def5-4c4d-9942-8b668b7905fe",
+  "currentRevision": "ab4c353a-9a5b-4571-8852-b518717970b4",
+  "pendingChanges": false,
+  "files": {
+    "AGENTS.md": {
+      "hash": "1d4f0c8ca2507b94fd7c9df709fff01416adbd51a0f922b9d6ed2f40129147d5",
+      "content": "/root/.cache/hyperframes/history/8e872efc-def5-4c4d-9942-8b668b7905fe/blobs/1d/1d4f0c8ca2507b94fd7c9df709fff01416adbd51a0f922b9d6ed2f40129147d5"
+    },
+    "CLAUDE.md": {
+      "hash": "1d4f0c8ca2507b94fd7c9df709fff01416adbd51a0f922b9d6ed2f40129147d5",
+      "content": "/root/.cache/hyperframes/history/8e872efc-def5-4c4d-9942-8b668b7905fe/blobs/1d/1d4f0c8ca2507b94fd7c9df709fff01416adbd51a0f922b9d6ed2f40129147d5"
+    },
+    "hyperframes.json": {
+      "hash": "53dbce1e19aa713cbb12ee0bc4d206143b45ab15e6ffbfcaa8f69572d4d24d50",
+      "content": "/root/.cache/hyperframes/history/8e872efc-def5-4c4d-9942-8b668b7905fe/blobs/53/53dbce1e19aa713cbb12ee0bc4d206143b45ab15e6ffbfcaa8f69572d4d24d50"
+    },
+    "index.html": {
+      "hash": "31aea0f47a97e4d64538866622a4d1a6027bf9ef71871a222f719064ca2f0b2f",
+      "content": "/root/.cache/hyperframes/history/8e872efc-def5-4c4d-9942-8b668b7905fe/blobs/31/31aea0f47a97e4d64538866622a4d1a6027bf9ef71871a222f719064ca2f0b2f"
+    },
+    "meta.json": {
+      "hash": "5dd0bda456b8346c75fd63b3cfa92ac7319ee109ab933ddda049c0317cdbb4b5",
+      "content": "/root/.cache/hyperframes/history/8e872efc-def5-4c4d-9942-8b668b7905fe/blobs/5d/5dd0bda456b8346c75fd63b3cfa92ac7319ee109ab933ddda049c0317cdbb4b5"
+    },
+    "package.json": {
+      "hash": "2be1fac5eda99a017d6c3def947bc5c501e8c0b1c4d25881d79144142a9ef689",
+      "content": "/root/.cache/hyperframes/history/8e872efc-def5-4c4d-9942-8b668b7905fe/blobs/2b/2be1fac5eda99a017d6c3def947bc5c501e8c0b1c4d25881d79144142a9ef689"
+    }
+  },
+  "revisions": {
+    "fa9db6f5-c7ee-4ffa-b7d8-b28b8c366b93": {
+      "actor": {
+        "kind": "outside",
+        "name": "Outside"
+      },
+      "label": "Changed outside the app",
+      "startedAt": 1792516953936,
+      "endedAt": 1792516953936,
+      "files": {
+        "index.html": {
+          "before": "/root/.cache/hyperframes/history/8e872efc-def5-4c4d-9942-8b668b7905fe/blobs/a7/a71cc2852d7ea42ac82c56044ba9c82cf9a24c617fec24ed43628c7c0b31940a",
+          "after": "/root/.cache/hyperframes/history/8e872efc-def5-4c4d-9942-8b668b7905fe/blobs/4c/4cbe3fd294afc3cd1065a58b91260638aa702421b15c1a3ad533c575118ec0e8"
+        }
+      }
+    },
+    "ab4c353a-9a5b-4571-8852-b518717970b4": {
+      "actor": {
+        "kind": "outside",
+        "name": "Outside"
+      },
+      "label": "Changed outside the app",
+      "startedAt": 1792517051668,
+      "endedAt": 1792517051669,
+      "files": {
+        "index.html": {
+          "before": "/root/.cache/hyperframes/history/8e872efc-def5-4c4d-9942-8b668b7905fe/blobs/4c/4cbe3fd294afc3cd1065a58b91260638aa702421b15c1a3ad533c575118ec0e8",
+          "after": "/root/.cache/hyperframes/history/8e872efc-def5-4c4d-9942-8b668b7905fe/blobs/31/31aea0f47a97e4d64538866622a4d1a6027bf9ef71871a222f719064ca2f0b2f"
+        }
+      }
+    }
+  },
+  "checks": {
+    "latest": {
+      "revision": "ab4c353a-9a5b-4571-8852-b518717970b4",
+      "id": "3b4f8d6a-3947-4ecf-8fb8-c6d62323fffa"
+    },
+    "revisions": {
+      "fa9db6f5-c7ee-4ffa-b7d8-b28b8c366b93": [
+        {
+          "id": "0b006d53-1347-4fdf-bfa2-06f78e5ea3d6",
+          "scope": "project",
+          "metadata": {
+            "ok": false,
+            "browserSkipped": true,
+            "options": {
+              "samples": 9,
+              "atTransitions": false,
+              "maxIssues": 80,
+              "collapseStatic": true,
+              "tolerance": 2,
+              "timeout": 3000,
+              "contrast": true,
+              "strict": false,
+              "snapshots": false,
+              "browserGpuMode": "auto"
+            }
+          },
+          "createdAt": 1792516954927,
+          "contentHash": "7175371fc8c681e7b2e561ffe501a7d93574687a1d3e1963a47b90b02ba51a60",
+          "revision": "fa9db6f5-c7ee-4ffa-b7d8-b28b8c366b93",
+          "inputFingerprint": "73ca857e90fcbba1150fa58f88e9bb82f7e84f6f3adeeb325ca21aec6a11240d",
+          "inputScope": "local-project-files",
+          "attribution": "recorded-revision",
+          "status": "cleaned",
+          "cleanedAfterRender": "b76e480a-1c29-4d4d-907e-776eb3d2741f"
+        },
+        {
+          "id": "1a761fd7-0f3d-4501-871f-4dd7e8d7c70c",
+          "scope": "project",
+          "metadata": {
+            "ok": true,
+            "browserSkipped": false,
+            "options": {
+              "samples": 9,
+              "atTransitions": false,
+              "maxIssues": 80,
+              "collapseStatic": true,
+              "tolerance": 2,
+              "timeout": 3000,
+              "contrast": true,
+              "strict": false,
+              "snapshots": false,
+              "browserGpuMode": "auto"
+            }
+          },
+          "createdAt": 1792517028438,
+          "contentHash": "bca3485d1ecb54fe70cc870e1bac3a22a30ea8a7dab3eba471fa3a9bb10c85ad",
+          "revision": "fa9db6f5-c7ee-4ffa-b7d8-b28b8c366b93",
+          "inputFingerprint": "73ca857e90fcbba1150fa58f88e9bb82f7e84f6f3adeeb325ca21aec6a11240d",
+          "inputScope": "local-project-files",
+          "attribution": "recorded-revision",
+          "status": "cleaned",
+          "cleanedAfterRender": "b76e480a-1c29-4d4d-907e-776eb3d2741f"
+        }
+      ],
+      "ab4c353a-9a5b-4571-8852-b518717970b4": [
+        {
+          "id": "3b4f8d6a-3947-4ecf-8fb8-c6d62323fffa",
+          "scope": "project",
+          "report": "/c/Users/raphe/Webdev/sideQuest/uvly/proj1/brag-output-2026-10-20-171527/composition/.hyperframes/artifacts/checks/3b4f8d6a-3947-4ecf-8fb8-c6d62323fffa.json",
+          "metadata": {
+            "ok": true,
+            "browserSkipped": false,
+            "options": {
+              "samples": 9,
+              "atTransitions": false,
+              "maxIssues": 80,
+              "collapseStatic": true,
+              "tolerance": 2,
+              "timeout": 3000,
+              "contrast": true,
+              "strict": false,
+              "snapshots": false,
+              "browserGpuMode": "auto"
+            }
+          },
+          "createdAt": 1792517055301,
+          "contentHash": "36dd2b94842edd722b3e16b0f8663c74da28783e702b18c66f6e37f632460356",
+          "revision": "ab4c353a-9a5b-4571-8852-b518717970b4",
+          "inputFingerprint": "26b45c0412771f3aeee358cda492d70aaa8ee5dfb1e94fd1db6b64c746780cdb",
+          "inputScope": "local-project-files",
+          "attribution": "recorded-revision"
+        }
+      ]
+    },
+    "unversioned": [
+      {
+        "id": "a5d11b36-92e6-4b81-b90d-c831a23d84a5",
+        "scope": "project",
+        "report": "/c/Users/raphe/Webdev/sideQuest/uvly/proj1/brag-output-2026-10-20-171527/composition/.hyperframes/artifacts/checks/a5d11b36-92e6-4b81-b90d-c831a23d84a5.json",
+        "metadata": {
+          "ok": false,
+          "browserSkipped": true,
+          "options": {
+            "samples": 9,
+            "atTransitions": false,
+            "maxIssues": 80,
+            "collapseStatic": true,
+            "tolerance": 2,
+            "timeout": 3000,
+            "contrast": true,
+            "strict": false,
+            "snapshots": false,
+            "browserGpuMode": "auto"
+          }
+        },
+        "createdAt": 1792516863413,
+        "contentHash": "ebfd349f42f11801daf23bef25e52fb5c640fb38bef57eadfd5234841636adfc",
+        "revision": null,
+        "inputFingerprint": "4dcab48028079d2813663c214161563b82c6dcc460970298b177f37c0df2a27c",
+        "inputScope": "local-project-files",
+        "attribution": "unversioned"
+      }
+    ]
+  },
+  "snapshots": {
+    "latest": null,
+    "revisions": {},
+    "unversioned": []
+  },
+  "renders": {
+    "latest": {
+      "id": "b76e480a-1c29-4d4d-907e-776eb3d2741f",
+      "completedAt": 1792517186451,
+      "output": "/c/Users/raphe/Webdev/sideQuest/uvly/proj1/brag-output-2026-10-20-171527/brag.mp4",
+      "status": "completed",
+      "revision": "ab4c353a-9a5b-4571-8852-b518717970b4"
+    },
+    "retainedRevisions": [
+      "ab4c353a-9a5b-4571-8852-b518717970b4"
+    ]
+  },
+  "pendingArtifactCleanup": []
+}

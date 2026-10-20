@@ -1,112 +1,348 @@
 # TraceWeave
 
-TraceWeave is a deterministic incident-reconstruction engine for turning
-heterogeneous security logs into an evidence-backed timeline. It keeps facts,
-inferences, and unknowns separate, and makes the provenance and uncertainty of
-each result inspectable.
+> **Evidence before conclusions.** A deterministic incident-reconstruction workbench for turning heterogeneous security logs into a provenance-backed timeline, relationship graph, and review queue.
 
-## Current release
+[![CI](https://github.com/yuvikagoel/Traceweave/actions/workflows/ci.yml/badge.svg)](https://github.com/yuvikagoel/Traceweave/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.12%2B-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-14-black.svg?logo=next.js)](https://nextjs.org/)
+[![Docker](https://img.shields.io/badge/docker-compose-2496ED.svg?logo=docker&logoColor=white)](https://docs.docker.com/compose/)
 
-The repository contains the local-first MVP: deterministic parsers for the
-three demo formats, evidence hashing and chain verification, a rule-oriented
-analysis pipeline, JSON/HTML reports, a FastAPI service, a Typer CLI, a
-Next.js investigation workspace, five case ground-truth files, and Docker
-packaging. The UI is intentionally usable in demo mode without an API.
+## ✨ What TraceWeave does
 
-## Intended architecture
+TraceWeave helps an analyst move from raw telemetry to an auditable investigation without hiding uncertainty:
 
-The planned pipeline is layered:
+- 🧾 **Ingest** auth JSONL, application audit logs, CSV/network evidence, or pasted records.
+- 🕒 **Normalize** timestamps, identities, source locations, raw lines, and field mappings.
+- 🔗 **Chain** every raw record with a deterministic SHA-256 evidence chain.
+- 🧠 **Reason** with explicit, reviewable rules instead of opaque conclusions.
+- 🕸️ **Map** evidence relationships between records, entities, and claims.
+- ⚠️ **Surface** contradictions, clock skew, missing sources, parser diagnostics, and limitations.
+- 🔍 **Inspect** claim provenance down to the original file, line, raw record, and hashes.
+- 📤 **Export** JSON, JSONL, and HTML reports.
+- 🐳 **Deploy** the API and investigation workspace together with one Docker Compose command.
 
-1. **Evidence store** — retain raw records with source locations and a
-   tamper-evident hash chain.
-2. **Normalization** — parse the MVP log formats into canonical events and
-   resolve entities through explicit join keys.
-3. **Evidence graph** — represent events, entities, claims, gaps, and
-   contradictions with provenance-bearing edges.
-4. **Deterministic reasoning** — apply reviewable correlation and expectation
-   rules with decomposed confidence factors.
-5. **Reporting** — emit reproducible JSON and HTML reports.
-6. **Interfaces** — expose the engine through the FastAPI API, CLI, and
-   investigation UI.
+TraceWeave is intentionally deterministic: the same evidence bytes and configuration produce the same case identity and report payload.
 
-The core invariants and implementation stages are recorded in
-[`docs/architecture.md`](docs/architecture.md).
+## 🎬 Demo
 
-## Run locally
+The repository includes deterministic simulated evidence and a browser-based investigation workspace. The fastest walkthrough is:
 
-TraceWeave targets Python 3.12. From the repository root:
+1. Start the stack with Docker Compose.
+2. Open the workspace at `http://localhost:3000`.
+3. Choose **Load demo case → Generated attack scenario**.
+4. Review **Chronology**, **Claims**, **Relationship map**, and **Findings**.
+5. Open a claim's supporting raw records and export the HTML report.
+
+The generated scenario demonstrates a credential-compromise-to-exfiltration flow. It is synthetic and safe to run locally; it is not a production incident dataset.
+
+## 🚀 Run with Docker (recommended)
+
+### Prerequisites
+
+- Docker Engine 24+ with the Compose plugin
+- Git
+
+### Start from a clean checkout
 
 ```sh
-make install
+git clone https://github.com/yuvikagoel/Traceweave.git
+cd Traceweave
+cp .env.example .env
+docker compose config
+docker compose up --build
+```
+
+Open:
+
+| Service | URL | Purpose |
+|---|---|---|
+| 🖥️ Web workspace | http://localhost:3000 | Investigation UI |
+| ⚙️ API | http://localhost:8000 | FastAPI service |
+| 💚 API health | http://localhost:8000/health | Readiness and storage check |
+
+Run in the background:
+
+```sh
+docker compose up --build -d
+docker compose ps
+curl --fail http://127.0.0.1:8000/health
+curl --fail http://127.0.0.1:3000
+```
+
+Stop the stack:
+
+```sh
+docker compose down
+```
+
+Remove the local SQLite volume as well:
+
+```sh
+docker compose down -v
+```
+
+### Docker configuration
+
+`.env.example` documents the supported settings:
+
+```dotenv
+TRACEWEAVE_DATA_DIR=.traceweave-data
+TRACEWEAVE_CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+TRACEWEAVE_API_KEY=
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+`NEXT_PUBLIC_API_URL` is embedded into the Next.js browser bundle at image build time. Rebuild the web image after changing it:
+
+```sh
+docker compose build --no-cache web
+docker compose up -d
+```
+
+The web container explicitly binds Next.js to `0.0.0.0`. This matters in Docker: if the container hostname is used as the bind address, startup can fail with `getaddrinfo EAI_AGAIN <container-id>`.
+
+## 🧭 Using the workspace
+
+### 1. Load a demo
+
+Select a case from **Load demo case**. Demo files are sent through the same multipart ingestion path used by real uploads; the UI does not inject a fake result.
+
+### 2. Read the chronology
+
+The chronology shows normalized event time, event type, source file, line number, raw evidence, raw SHA-256, and chain hash. Use the search box to filter by event type, source, or raw text.
+
+### 3. Review claims
+
+Claims are separated by epistemic state:
+
+- 🟡 **Observed** — directly represented by source evidence.
+- 🔵 **Inferred** — generated by an explicit rule and accompanied by confidence factors and limitations.
+- 🟣 **Unknown** — intentionally unresolved.
+
+Select a claim to inspect its supporting provenance records.
+
+### 4. Inspect the relationship map
+
+The graph links evidence records to entities or inferred objects. Use the zoom controls and select a node to focus an investigation question.
+
+### 5. Resolve findings
+
+The findings view groups:
+
+- Contradictions, including identity conflicts and clock skew.
+- Evidence gaps for expected sources that were not observed.
+- Parser diagnostics and known limitations.
+
+### 6. Export a report
+
+Use the **Open report** action in the workspace or call the API directly:
+
+```sh
+curl -o report.json 'http://localhost:8000/cases/<CASE_ID>/report?format=json'
+curl -o report.html 'http://localhost:8000/cases/<CASE_ID>/report?format=html'
+curl -o events.jsonl 'http://localhost:8000/cases/<CASE_ID>/events/export?format=jsonl'
+```
+
+If API-key protection is enabled, pass `X-API-Key` or the `api_key` query parameter.
+
+## 📦 Supported evidence formats
+
+| Format | Detection | Example fields |
+|---|---|---|
+| Auth JSONL | `.jsonl`, `.auth`, `.auth.json` | `id`, `timestamp`, `user`, `src_ip`, `action` |
+| Application audit | `.audit`, `.audit.log`, `.app.log` | JSON lines or `key=value` tokens |
+| Network CSV | `.csv`, `.conn`, `.network` | `id`, `timestamp`/`ts`/`time`, network fields |
+
+Example auth record:
+
+```json
+{"id":"login-1","timestamp":"2026-01-01T10:00:00Z","user":"alice","src_ip":"10.0.0.1","action":"login"}
+```
+
+Example audit record:
+
+```text
+id=app-1 timestamp=2026-01-01T10:01:00Z user=alice action=read
+```
+
+Example network CSV:
+
+```csv
+id,timestamp,src_ip,dst_ip
+net-1,2026-01-01T10:02:00Z,10.0.0.1,10.0.0.9
+```
+
+## ⚙️ API reference by workflow
+
+| Method | Endpoint | Use |
+|---|---|---|
+| `GET` | `/health` | Container health and database count |
+| `GET` | `/demo-cases` | List deterministic demo scenarios |
+| `POST` | `/demo-cases/{demo_id}/load` | Load a demo through normal ingestion |
+| `POST` | `/cases` | Upload multipart evidence |
+| `GET` | `/cases` | List persisted cases |
+| `GET` | `/cases/{id}` | Read a case summary |
+| `GET` | `/cases/{id}/timeline` | Read normalized timeline |
+| `GET` | `/cases/{id}/claims` | Read claims |
+| `GET` | `/cases/{id}/graph` | Read graph data |
+| `GET` | `/cases/{id}/gaps` and `/cases/{id}/contradictions` | Populate the Findings view |
+| `GET` | `/cases/{id}/integrity` | Recompute and verify the evidence chain |
+| `GET` | `/cases/{id}/manifest` | Files, counts, chain head, and validity |
+| `GET` | `/cases/{id}/report?format=json\|html` | Export report |
+| `DELETE` | `/cases/{id}` | Delete a local case |
+
+Upload example:
+
+```sh
+curl -X POST http://localhost:8000/cases \\
+  -F 'files=@datasets/case1_auth.jsonl' \\
+  -F 'files=@datasets/case1_application.audit' \\
+  -F 'files=@datasets/case1_network.csv' \\
+  -F 'config={}'
+```
+
+Configuration can provide `source_id`, `timezone`, `known_clock_offset_seconds`, and `field_mappings` per filename. Configuration participates in the case identity, so changing interpretation creates a distinct case.
+
+## 🧪 Local development
+
+TraceWeave pins Python and Node runtime versions in `.python-version` and `.nvmrc`.
+
+```sh
+python3.12 -m venv .venv
+. .venv/bin/activate
+python -m pip install -r requirements.txt
+make lint
 make test
 ```
 
-Start the API:
+Run the API:
 
 ```sh
-PYTHONPATH=src uvicorn api.app:app --reload --port 8000
+PYTHONPATH=src uvicorn api.app:app --reload --host 127.0.0.1 --port 8000
 ```
 
-Keep this terminal running. In a second terminal, start the web app with the
-API URL explicitly configured:
+Run the web app in another terminal:
 
 ```sh
 cd web
+npm ci
 NEXT_PUBLIC_API_URL=http://127.0.0.1:8000 npm run dev
 ```
 
-The API allows the local frontend origins `http://localhost:3000` and
-`http://127.0.0.1:3000` by default. For another frontend origin, set
-`TRACEWEAVE_CORS_ORIGINS` to a comma-separated list before starting Uvicorn.
-
-Analyze the bundled evidence and create reports:
+Run the CLI:
 
 ```sh
 PYTHONPATH=src python -m cli.main analyze datasets -o output/report.json
 PYTHONPATH=src python -m cli.main analyze datasets --format html -o output/report.html
 ```
 
-Start the web application in another terminal:
+## 🧱 Architecture
+
+```text
+┌──────────────┐   ┌──────────────┐   ┌─────────────────┐
+│ JSONL / CSV  │──▶│ Deterministic│──▶│ Canonical event │
+│ audit files  │   │ parsers      │   │ + provenance    │
+└──────────────┘   └──────────────┘   └────────┬────────┘
+                                               │
+                         ┌─────────────────────┼─────────────────────┐
+                         ▼                     ▼                     ▼
+                  ┌────────────┐       ┌────────────┐       ┌─────────────┐
+                  │ SHA-256    │       │ Rule engine│       │ SQLite      │
+                  │ chain      │       │ + claims   │       │ persistence │
+                  └─────┬──────┘       └─────┬──────┘       └──────┬──────┘
+                        └────────────────────┼─────────────────────┘
+                                             ▼
+                                  ┌────────────────────┐
+                                  │ API + UI + reports  │
+                                  └────────────────────┘
+```
+
+Key invariants:
+
+1. Raw records remain available for inspection.
+2. Hash-chain verification uses the persisted raw payload.
+3. Inferences are marked separately from observations.
+4. Provenance is carried through API responses and reports.
+5. Identical bytes plus identical configuration produce identical case IDs.
+
+## 🔐 Security and deployment notes
+
+- Set `TRACEWEAVE_API_KEY` outside local demos when the API is exposed beyond localhost.
+- Restrict `TRACEWEAVE_CORS_ORIGINS` to the exact deployed web origin.
+- Put TLS, authentication policy, rate limiting, and network controls in front of the containers for production.
+- The included SQLite volume is suitable for a single-node deployment. Use a managed persistence strategy before running multiple API replicas.
+- Do not commit `.env`; use `.env.example` as the redacted template.
+
+## 🩺 Troubleshooting
+
+### `web-1 | getaddrinfo EAI_AGAIN <container-id>`
+
+The web image must bind Next.js to all container interfaces, not the Compose-generated hostname. This repository sets:
+
+```dockerfile
+ENV HOSTNAME=0.0.0.0 PORT=3000
+```
+
+Rebuild the web image:
 
 ```sh
-cd web
-npm install
-NEXT_PUBLIC_API_URL=http://127.0.0.1:8000 npm run dev
+docker compose down
+docker compose build --no-cache web
+docker compose up
 ```
 
-Then open `http://localhost:3000`. The UI never invents a case when the API is
-unavailable; it shows the connection error and a retry action. With the API
-running, use **Upload evidence** or **Load simulated attack**. The simulator
-files are generated by the backend and then sent through the same multipart
-`POST /cases` workflow as user-provided logs.
+### The UI says it cannot reach the API
 
-## Native setup without Docker
-
-Windows PowerShell:
-
-```powershell
-.\setup.ps1
-.\start.ps1
-```
-
-Linux/macOS:
+Check the API from the host browser's network namespace:
 
 ```sh
-./setup.sh
-./start.sh
+curl --fail http://localhost:8000/health
 ```
 
-These scripts create `.venv`, install the pinned `requirements.txt`, install
-the frontend with `npm install`, and start Uvicorn plus Next.js together. The
-SQLite database is created at `.traceweave-data/traceweave.sqlite3`. Copy
-`.env.example` to `.env` and set `TRACEWEAVE_API_KEY` when API-key protection
-is required.
+Then ensure `NEXT_PUBLIC_API_URL` is a browser-reachable URL such as `http://localhost:8000`, not `http://api:8000`.
 
-For a containerized run:
+### API is healthy but web starts too early
+
+Compose uses the API health check and `depends_on.condition: service_healthy`. Inspect status:
 
 ```sh
-docker compose up --build
+docker compose ps
+docker compose logs api web
 ```
 
-The API is at `http://localhost:8000` and the UI is at
-`http://localhost:3000`. Docker is required for this option.
+## 🛠️ Checks and CI
+
+The canonical offline test command is:
+
+```sh
+make test
+```
+
+Additional checks:
+
+```sh
+make lint
+make docker-config
+make docker-smoke
+```
+
+CI runs Python tests, the Next.js type/build checks, Docker Compose validation, image builds, and service smoke tests.
+
+## 📁 Repository map
+
+```text
+api/                  FastAPI application and SQLite persistence
+src/traceweave/       Parsers, models, chain, graph, pipeline, reports
+cli/                  Typer command-line interface
+web/                  Next.js investigation workspace
+datasets/             Deterministic demo evidence and ground truth
+tests/                Engine and API contract tests
+docs/                 Architecture and deployment notes
+Dockerfile.api        Production API image
+docker-compose.yml    API + web deployment
+```
+
+## 📄 License
+
+TraceWeave is released under the MIT License. See [LICENSE](LICENSE).
