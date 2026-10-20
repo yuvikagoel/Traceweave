@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=1920,height=1080" />
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <style>
+    :root { --bg:#0b0d10; --panel:#11161b; --panel2:#151d23; --line:#2a343c; --text:#e8e6e1; --muted:#8d9aa2; --amber:#f2c46d; --cyan:#6fd3e8; --green:#83d69a; --purple:#a798e8; }
+    * { box-sizing:border-box; }
+    html,body { margin:0; width:1920px; height:1080px; overflow:hidden; background:var(--bg); color:var(--text); font-family:Inter, ui-sans-serif, system-ui, -apple-system, sans-serif; }
+    #root { position:relative; width:100%; height:100%; overflow:hidden; background:radial-gradient(circle at 75% 15%, #17242a 0, var(--bg) 42%); }
+    .grain { position:absolute; inset:0; opacity:.12; background-image:linear-gradient(transparent 49%, rgba(255,255,255,.04) 50%, transparent 51%); background-size:100% 8px; pointer-events:none; }
+    .scene { position:absolute; inset:0; padding:88px 118px; }
+    .kicker { color:var(--amber); font-size:20px; letter-spacing:.22em; font-weight:700; }
+    h1,h2,p { margin:0; }
+    .hero-title { margin-top:38px; max-width:1100px; font-size:112px; line-height:.95; letter-spacing:-.065em; font-weight:800; }
+    .hero-title em { color:var(--amber); font-style:normal; }
+    .hero-sub { margin-top:34px; color:var(--muted); font-size:28px; max-width:760px; line-height:1.3; }
+    .raw-line { position:absolute; left:118px; right:118px; bottom:132px; border:1px solid var(--line); background:#0e1317; padding:24px 28px; color:var(--green); font:24px ui-monospace, SFMono-Regular, Consolas, monospace; box-shadow:0 16px 70px rgba(0,0,0,.32); }
+    .shell { border:1px solid #34414a; background:rgba(12,16,20,.94); border-radius:22px; box-shadow:0 28px 100px rgba(0,0,0,.4); overflow:hidden; }
+    .shell-head { height:82px; padding:0 30px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--line); }
+    .brand { display:flex; align-items:center; gap:14px; font-weight:800; letter-spacing:.12em; }
+    .brand-mark { width:32px; height:32px; display:grid; place-items:center; border-radius:10px; background:var(--amber); color:#101316; }
+    .status { color:var(--green); font-size:18px; letter-spacing:.12em; font-weight:700; }
+    .body { display:grid; grid-template-columns:260px 1fr; min-height:650px; }
+    .rail { padding:28px 20px; border-right:1px solid var(--line); }
+    .rail-label { color:var(--muted); font-size:14px; letter-spacing:.16em; margin-bottom:16px; }
+    .rail-item { padding:17px 14px; border-radius:12px; margin-bottom:8px; color:var(--muted); font-size:19px; }
+    .rail-item.active { color:var(--text); background:#1b252b; border:1px solid #35434b; }
+    .content { padding:32px; }
+    .content-head { display:flex; justify-content:space-between; align-items:flex-start; }
+    .content h2 { font-size:36px; letter-spacing:-.04em; }
+    .micro { color:var(--muted); margin-top:8px; font-size:18px; }
+    .chips { display:flex; gap:10px; margin-top:22px; }
+    .chip { border:1px solid #3d4a52; border-radius:999px; padding:9px 14px; color:var(--muted); font:15px ui-monospace,monospace; }
+    .chip.on { color:var(--amber); border-color:#7f6732; }
+    .ledger { margin-top:26px; border-top:1px solid var(--line); }
+    .row { display:grid; grid-template-columns:190px 150px 1fr 140px; gap:18px; align-items:center; padding:24px 0; border-bottom:1px solid #202a31; }
+    .row time,.source { color:var(--muted); font:16px ui-monospace,monospace; }
+    .event { font-size:22px; font-weight:700; }
+    .tag { display:inline-block; width:max-content; padding:7px 12px; border-radius:999px; background:#1a3024; color:var(--green); font-size:15px; font-weight:700; }
+    .side { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:28px; }
+    .card { border:1px solid var(--line); background:var(--panel); border-radius:16px; padding:24px; }
+    .card h3 { font-size:22px; margin-bottom:20px; }
+    .claim-card { min-height:180px; }
+    .claim-state { font-size:14px; letter-spacing:.14em; font-weight:800; }
+    .observed { color:var(--amber); } .inferred { color:var(--cyan); } .unknown { color:var(--purple); }
+    .claim-copy { margin-top:18px; font-size:24px; font-weight:700; }
+    .provenance { margin-top:18px; color:var(--muted); font:15px ui-monospace,monospace; }
+    .graph { position:relative; height:580px; margin-top:22px; border:1px solid var(--line); border-radius:16px; background:linear-gradient(135deg,#0d1317,#111b20); }
+    .graph svg { width:100%; height:100%; }
+    .link { stroke:#4a6971; stroke-width:3; stroke-dasharray:8 10; opacity:.8; }
+    .node circle { fill:#142027; stroke:var(--cyan); stroke-width:3; }
+    .node text { fill:var(--text); font-size:19px; text-anchor:middle; dominant-baseline:middle; font-weight:700; }
+    .finding { margin-top:22px; padding:24px; border:1px solid #426650; background:#102018; border-radius:16px; display:flex; justify-content:space-between; align-items:center; }
+    .finding strong { color:var(--green); font-size:28px; }
+    .finding span { color:var(--muted); font-size:18px; }
+    .lockup { position:absolute; inset:0; display:grid; place-items:center; text-align:center; }
+    .lockup h2 { font-size:92px; letter-spacing:-.06em; }
+    .lockup p { color:var(--muted); font-size:28px; margin-top:24px; }
+    .pill-row { display:flex; gap:14px; justify-content:center; margin-top:46px; }
+    .pill { padding:12px 18px; border-radius:999px; border:1px solid #38444c; font-weight:800; letter-spacing:.08em; }
+    .footer { position:absolute; left:118px; right:118px; bottom:44px; display:flex; justify-content:space-between; color:#8b979d; font-size:16px; letter-spacing:.06em; }
+  </style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="20" data-width="1920" data-height="1080">
+  <div class="grain"></div>
+  <section id="scene-hook" class="scene clip" data-start="0" data-duration="3" data-track-index="0">
+    <div class="kicker hook-kicker">TRACEWEAVE / DETERMINISTIC RECONSTRUCTION</div>
+    <h1 class="hero-title hook-title">DON'T TRUST<br /><em>THE TIMELINE.</em></h1>
+    <p class="hero-sub hook-sub">Raw evidence in. Auditable conclusions out. Every claim has a trail.</p>
+    <div class="raw-line hook-raw">2026-01-01T10:00:00Z  login  user=alice  src_ip=10.0.0.1  <span>▮</span></div>
+    <div class="footer"><span>EVIDENCE BEFORE CONCLUSIONS</span><span>01 / 05</span></div>
+  </section>
+  <section id="scene-ledger" class="scene clip" data-start="3" data-duration="4" data-track-index="0">
+    <div class="shell ui-shell">
+      <div class="shell-head"><div class="brand"><span class="brand-mark">T</span> TRACEWEAVE</div><div class="status">● CHAIN VERIFIED</div></div>
+      <div class="body"><aside class="rail"><div class="rail-label">INVESTIGATION</div><div class="rail-item active">◷ Chronology</div><div class="rail-item">◇ Claims</div><div class="rail-item">⌘ Relationship map</div><div class="rail-item">! Findings</div></aside><div class="content"><div class="content-head"><div><div class="kicker">EVENT LEDGER</div><h2>Chronological evidence</h2><p class="micro">Every event keeps its source, line, and integrity metadata.</p></div><span class="tag">3 RECORDS</span></div><div class="chips"><span class="chip on">auth.jsonl</span><span class="chip">application.audit</span><span class="chip">network.csv</span></div><div class="ledger"><div class="row ui-row"><time>10:00:00Z</time><span class="event">login</span><span class="source">auth.jsonl · line 1</span><span class="tag">Observed</span></div><div class="row ui-row"><time>10:01:00Z</time><span class="event">read</span><span class="source">application.audit · line 1</span><span class="tag">Observed</span></div><div class="row ui-row"><time>10:02:00Z</time><span class="event">network</span><span class="source">network.csv · line 2</span><span class="tag">Observed</span></div></div></div></div>
+    </div><div class="footer"><span>INGEST → NORMALIZE → VERIFY</span><span>02 / 05</span></div>
+  </section>
+  <section id="scene-claims" class="scene clip" data-start="7" data-duration="4" data-track-index="0">
+    <div class="kicker">CLAIM REGISTER / EPISTEMIC STATE</div><h2 style="font-size:64px;letter-spacing:-.05em;margin-top:16px;">Claims stay honest.</h2>
+    <div class="side"><div class="card claim-card claim-one"><div class="claim-state observed">OBSERVED</div><p class="claim-copy">login-1 <span class="muted">actor</span> alice</p><div class="provenance">raw line 1 → sha256 → chain link</div></div><div class="card claim-card claim-two"><div class="claim-state inferred">INFERRED</div><p class="claim-copy">login-1 <span class="muted">supports</span> account</p><div class="provenance">rule: R-1 · confidence 0.80 · limitation attached</div></div></div>
+    <div class="finding claim-strip"><strong>Provenance is inspectable.</strong><span>Click a claim. Open the supporting raw records.</span></div><div class="footer"><span>OBSERVATIONS ≠ INFERENCES</span><span>03 / 05</span></div>
+  </section>
+  <section id="scene-graph" class="scene clip" data-start="11" data-duration="5" data-track-index="0">
+    <div class="kicker">RELATIONSHIP MAP / EVIDENCE GRAPH</div><h2 style="font-size:62px;letter-spacing:-.05em;margin-top:16px;">See the connections.</h2>
+    <div class="graph"><svg viewBox="0 0 1500 580"><line class="link graph-link" x1="240" y1="260" x2="550" y2="150"/><line class="link graph-link" x1="550" y1="150" x2="860" y2="290"/><line class="link graph-link" x1="860" y1="290" x2="1190" y2="170"/><line class="link graph-link" x1="860" y1="290" x2="1170" y2="440"/><g class="node graph-node"><circle cx="240" cy="260" r="62"/><text x="240" y="260">login-1</text></g><g class="node graph-node"><circle cx="550" cy="150" r="62"/><text x="550" y="150">alice</text></g><g class="node graph-node"><circle cx="860" cy="290" r="62"/><text x="860" y="290">10.0.0.1</text></g><g class="node graph-node"><circle cx="1190" cy="170" r="62"/><text x="1190" y="170">net-1</text></g><g class="node graph-node"><circle cx="1170" cy="440" r="62"/><text x="1170" y="440">10.0.0.9</text></g></svg></div>
+    <div class="finding graph-finding"><strong>CHAIN VERIFIED</strong><span>Raw record → relationship → report</span></div><div class="footer"><span>CONNECT WHAT THE SOURCES CAN SUPPORT</span><span>04 / 05</span></div>
+  </section>
+  <section id="scene-outro" class="scene clip" data-start="16" data-duration="4" data-track-index="0">
+    <div class="lockup"><div><div class="kicker">TRACEWEAVE</div><h2>Evidence before<br /><span style="color:var(--amber)">conclusions.</span></h2><p>Investigate what the data can actually prove.</p><div class="pill-row"><span class="pill observed">OBSERVED</span><span class="pill inferred">INFERRED</span><span class="pill unknown">UNKNOWN</span></div></div></div><div class="footer"><span>DETERMINISTIC INCIDENT RECONSTRUCTION</span><span>05 / 05</span></div>
+  </section>
+</div>
+<script>
+  const tl = gsap.timeline({ paused: true });
+  const q = (s) => document.querySelectorAll(s);
+  tl.fromTo('.hook-kicker', { opacity:0, y:20 }, { opacity:1, y:0, duration:.35 }, 0)
+    .fromTo('.hook-title', { opacity:0, y:40 }, { opacity:1, y:0, duration:.6, ease:'power3.out' }, .2)
+    .fromTo('.hook-sub', { opacity:0, y:18 }, { opacity:1, y:0, duration:.4 }, .9)
+    .fromTo('.hook-raw', { opacity:0, x:-50 }, { opacity:1, x:0, duration:.45 }, 1.35)
+    .fromTo('.ui-shell', { opacity:0, y:40, scale:.97 }, { opacity:1, y:0, scale:1, duration:.55 }, 3)
+    .fromTo('.ui-row', { opacity:0, x:-30 }, { opacity:1, x:0, duration:.35, stagger:.35 }, 4.1)
+    .fromTo('.claim-one', { opacity:0, x:-40 }, { opacity:1, x:0, duration:.45 }, 7.2)
+    .fromTo('.claim-two', { opacity:0, x:40 }, { opacity:1, x:0, duration:.45 }, 7.65)
+    .fromTo('.claim-strip', { opacity:0, y:24 }, { opacity:1, y:0, duration:.4 }, 8.6)
+    .fromTo('.graph-node', { opacity:0, scale:.4 }, { opacity:1, scale:1, duration:.35, stagger:.2 }, 11.3)
+    .fromTo('.graph-link', { opacity:0 }, { opacity:1, duration:.3, stagger:.2 }, 12.2)
+    .fromTo('.graph-finding', { opacity:0, y:20 }, { opacity:1, y:0, duration:.4 }, 14.1)
+    .fromTo('.lockup > div', { opacity:0, y:30 }, { opacity:1, y:0, duration:.6 }, 16)
+    .fromTo('.pill', { opacity:0, y:20 }, { opacity:1, y:0, duration:.3, stagger:.18 }, 17.1);
+  window.__timelines['main'] = tl;
+  tl.seek(0);
+</script>
+</body>
+</html>

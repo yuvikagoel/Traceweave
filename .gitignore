@@ -42,3 +42,6 @@ docker-compose.override.yml
 .opencode/node_modules/
 .opencode/.cache/
 .opencode/tmp/
+
+.agents/
+skills-lock.json

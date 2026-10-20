@@ -6,7 +6,7 @@ from typing import Any
 from fastapi import FastAPI, File, HTTPException, UploadFile, Header, Form, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, StreamingResponse, Response, PlainTextResponse
-from traceweave.engine import canonical_json, html_report, parse_auth_jsonl, parse_application_audit, parse_network_csv, analyze
+from traceweave.engine import canonical_json, html_report, parse_auth_jsonl, parse_application_audit, parse_network_csv, analyze, HashChainEvidenceStore
 
 _SAFE=re.compile(r"[^A-Za-z0-9_.-]+")
 def _safe_name(n): return (_SAFE.sub("_",Path(n or "upload").name).strip("._") or "upload")[:120]
@@ -75,7 +75,7 @@ def create_app(data_dir=None):
     def _verify(cid):
         prev='0'*64
         for r in db.execute('SELECT * FROM records WHERE case_id=? ORDER BY rowid',(cid,)):
-            raw=json.loads(r['raw_json']); expected=hashlib.sha256(f'{prev}:{canonical_json(raw)}'.encode()).hexdigest()
+            raw=json.loads(r['raw_json']); expected=HashChainEvidenceStore.link_hash(prev, raw)
             if r['previous_hash']!=prev or r['chain_hash']!=expected: return False
             prev=r['chain_hash']
         return True
@@ -137,12 +137,16 @@ def create_app(data_dir=None):
         if not files: raise HTTPException(400,'at least one evidence file is required')
         try: configs=json.loads(config) if config else {}
         except Exception as e: raise HTTPException(400,f'invalid config JSON: {e}')
-        entries=[]; diagnostics=[]
+        entries=[]; diagnostics=[]; seen_names=set()
         for f in files:
-            data=await f.read(); name=_safe_name(f.filename or 'upload'); cfg=configs.get(name,configs.get(f.filename or '',configs.get('default',{})))
+            data=await f.read(); name=_safe_name(f.filename or 'upload')
+            if name in seen_names:
+                raise HTTPException(400, f'duplicate evidence filename: {name}')
+            seen_names.add(name)
+            cfg=configs.get(name,configs.get(f.filename or '',configs.get('default',{})))
             try: parsed,kind,file_diagnostics=_parse(name,data,cfg); diagnostics.extend(file_diagnostics); entries.append((name,data,cfg,parsed,kind))
             except Exception as e: diagnostics.append({'file':name,'line':None,'error':str(e)}); entries.append((name,data,cfg,[],_detect(name,data.decode('utf-8','replace'))))
-        manifest=[{'name':n,'sha256':hashlib.sha256(d).hexdigest()} for n,d,_,_,_ in sorted(entries)]
+        manifest=[{'name':n,'sha256':hashlib.sha256(d).hexdigest(),'config':c or {}} for n,d,c,_,_ in sorted(entries)]
         cid=hashlib.sha256(canonical_json(manifest).encode()).hexdigest()
         all_records=[r for _,_,_,rs,_ in sorted(entries) for r in rs]; result=analyze(all_records,expected_sources={n for n,_,_,_,_ in entries})
         analysis={'gaps':result.gaps,'contradictions':result.contradictions,'limitations':[],'confidence_breakdown':result.confidence_breakdown}
@@ -154,7 +158,7 @@ def create_app(data_dir=None):
             db.execute('INSERT OR REPLACE INTO files VALUES(?,?,?,?,?)',(cid,n,hashlib.sha256(d).hexdigest(),json.dumps(stored_cfg,sort_keys=True),kind))
         prev='0'*64
         for r in result.records:
-            ch=hashlib.sha256(f'{prev}:{canonical_json(r.raw_record)}'.encode()).hexdigest(); r.chain_hash=ch
+            ch=HashChainEvidenceStore.link_hash(prev, r.raw_record); r.chain_hash=ch
             rd=r.model_dump(mode='json'); rd['id']=r.id; claim_json=[c.model_dump(mode='json') for c in r.claims]
             db.execute('INSERT OR REPLACE INTO records VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)',(cid,r.id,r.source_id,r.file,r.line,r.raw_hash,ch,prev,r.raw_line,json.dumps(r.raw_record,sort_keys=True,ensure_ascii=False),json.dumps(rd.get('event',{}),sort_keys=True),json.dumps(rd.get('provenance',{}),sort_keys=True),json.dumps(claim_json,sort_keys=True)))
             prev=ch
@@ -211,7 +215,7 @@ def create_app(data_dir=None):
     def integrity(cid,_=Depends(_auth)):
         load(cid); previous='0'*64; broken_index=None
         for index,r in enumerate(db.execute('SELECT * FROM records WHERE case_id=? ORDER BY rowid',(cid,))):
-            raw=json.loads(r['raw_json']); expected=hashlib.sha256(f'{previous}:{canonical_json(raw)}'.encode()).hexdigest()
+            raw=json.loads(r['raw_json']); expected=HashChainEvidenceStore.link_hash(previous, raw)
             if r['previous_hash']!=previous or r['chain_hash']!=expected:
                 broken_index=index; break
             previous=r['chain_hash']

@@ -39,5 +39,11 @@ class HashChainEvidenceStore:
             previous_hash = entry.chain_hash
         return True
     @staticmethod
-    def _link_hash(record: EvidenceRecord, previous_hash: str) -> str:
-        return hashlib.sha256(f"{previous_hash}:{record.canonical_json()}".encode("utf-8")).hexdigest()
+    def link_hash(previous_hash: str, raw_record: object) -> str:
+        """Return the canonical persisted hash-chain link."""
+        from .models import canonical_json
+        return hashlib.sha256(f"{previous_hash}:{canonical_json(raw_record)}".encode("utf-8")).hexdigest()
+
+    @classmethod
+    def _link_hash(cls, record: EvidenceRecord, previous_hash: str) -> str:
+        return cls.link_hash(previous_hash, record.raw_record)
